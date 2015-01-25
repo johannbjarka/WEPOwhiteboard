@@ -1,0 +1,29 @@
+{
+  "name": "whiteboard",
+  "version": "0.0.0",
+  "description": "whiteboard made in canvas",
+  "main": "index.html",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "whiteboard",
+    "canvas",
+    "html5"
+  ],
+  "authors": [
+    "Johann Orn Bjarkason and Carl Andreas Sveinsson"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap-css-only": "~3.3.2"
+  }
+}
