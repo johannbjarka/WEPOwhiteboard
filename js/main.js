@@ -6,20 +6,17 @@ $(document).ready(function() {
     var global = {
         //canvas: document.getElementById("myCanvas"),
         context: canvas.getContext("2d"),
-        isDrawing: false
+        isDrawing: false,
+        isEraser: false
     };
 
     var drawing = {
         shapes: [],
+        redo: [],
         nextObject: "Pen",
         nextColor: "black",
-        nextWidth: "small",
-
-        drawAll: function drawAll() {
-            for (var i = 0; i < shapes.length; ++i) {
-                shapes[i].draw(/* TODO: there will be some parameters here...*/);
-            }
-        }
+        tempColor: "black",
+        nextWidth: 2
     };
 
     var Shape = Base.extend({
@@ -44,28 +41,54 @@ $(document).ready(function() {
     });
 
     var Pen = Shape.extend( {
-       constructor: function(x, y, color, thick) {
-           this.base(x, y, color, "Pen", thick);
-       },
-        draw: function(global) {
+        constructor: function(x, y, color, thick) {
+            this.base(x, y, color, "Pen", thick);
+            this.clickX = [];
+            this.clickY = [];
+        },
 
+        addClick: function(x, y) {
+            this.clickX.push(x);
+            this.clickY.push(y);
+        },
+
+        draw: function(global) {
+            this.addClick(this.endX, this.endY);
+            global.context.strokeStyle = this.color;
+            global.context.lineWidth = this.thickness;
+            global.context.lineJoin = "round";
+            global.context.beginPath();
+            global.context.moveTo(this.clickX[0], this.clickY[0]);
+            for(var i = 0; i < this.clickX.length; i++) {
+                global.context.lineTo(this.clickX[i], this.clickY[i]);
+                global.context.stroke();
+            }
         }
     });
 
     var Line = Shape.extend( {
-       constructor: function(x, y, color, thick) {
+        constructor: function(x, y, color, thick) {
            this.base(x, y, color, "Line", thick);
-       }
+        },
+
+        draw: function(global) {
+            global.context.strokeStyle = this.color;
+            global.context.lineWidth = this.thickness;
+            global.context.beginPath();
+            global.context.moveTo(this.x, this.y);
+            global.context.lineTo(this.endX, this.endY);
+            global.context.stroke();
+        }
     });
 
     var Rect = Shape.extend( {
-       constructor: function(x, y, color, thick) {
+        constructor: function(x, y, color, thick) {
          this.base(x, y, color, "Rect", thick);
-       },
+        },
         // TODO spyrja Hauk um þetta global drasl
         draw: function(global) {
             global.context.strokeStyle = this.color;
-            global.context.lineWidth = this.thick;
+            global.context.lineWidth = this.thickness;
             var bounds = this.calcBounds();
             global.context.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
         }
@@ -77,6 +100,24 @@ $(document).ready(function() {
         },
 
         draw: function(global) {
+            global.context.strokeStyle = this.color;
+            global.context.lineWidth = this.thickness;
+            var bounds = this.calcBounds();
+            var kappa = .5522848,
+                ox = (bounds.width / 2) * kappa,
+                oy = (bounds.height / 2) * kappa,
+                xe = bounds.x + bounds.width,
+                ye = bounds.y + bounds.height,
+                xm = bounds.x + bounds.width / 2,
+                ym = bounds.y + bounds.height / 2;
+
+            global.context.beginPath();
+            global.context.moveTo(bounds.x, ym);
+            global.context.bezierCurveTo(bounds.x, ym - oy, xm - ox, bounds.y, xm, bounds.y);
+            global.context.bezierCurveTo(xm + ox, bounds.y, xe, ym - oy, xe, ym);
+            global.context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+            global.context.bezierCurveTo(xm - ox, ye, bounds.x, ym + oy, bounds.x, ym);
+            global.context.stroke();
 
         }
     });
@@ -92,59 +133,70 @@ $(document).ready(function() {
         }
     });
 
-    var Eraser = Shape.extend( {
-        constructor: function(x, y, thick) {
-            this.base(x, y, "White", "Eraser", thick);
-        },
-
-        draw: function(global) {
-
+    $(".toolButton").click(function(event) {
+        var tool = $(this).attr("data-toolType");
+        if(tool === "Eraser") {
+            drawing.tempColor = drawing.nextColor;
+            drawing.nextColor = "white";
+            createShape = createPen;
+            drawing.isEraser = true;
+        }
+        else {
+            var temp = "create" + tool;
+            var fun = eval(temp);
+            createShape = fun;
+            drawing.isEraser = false;
         }
     });
 
-    $(".toolButton").click(function(event) {
-        var tool = $(this).attr("data-toolType");
-        var temp = "create" + tool;
-        var fun = eval(temp);
-        createShape = fun;
-    });
-
     $(".colorButton").click(function(event) {
-        drawing.nextColor = $(this).attr("data-color");
+        if(drawing.isEraser) {
+            drawing.nextColor = "white";
+        }
+        else {
+            drawing.nextColor = $(this).attr("data-color");
+        }
     });
 
     $(".thickButton").click(function(event) {
-        drawing.nextWidth = $(this).attr("data-thickness");
+        drawing.nextWidth = parseInt($(this).attr("data-thickness"));
     });
 //
     $("#clearButton").click(function(event) {
         drawing.shapes.length = 0;
         global.context.clearRect(0, 0, canvas.width, canvas.height);
+
+    });
+
+    $("#undoButton").click(function(event) {
+        var temp = drawing.shapes.pop();
+        if(temp !== undefined) {
+            drawing.redo.push(temp);
+        }
+        render();
+    });
+
+    $("#redoButton").click(function(event) {
+        /*if (typeof drawing.redo !== 'undefined' && drawing.redo.length > 0) {
+            drawing.shapes.push(drawing.redo.pop());
+        }*/
+        var temp = drawing.redo.pop();
+        if(temp !== undefined) {
+            drawing.shapes.push(temp);
+        }
+        render();
     });
 
     $("#myCanvas").mousedown(function(e){
         var x = e.pageX - this.offsetLeft;
         var y = e.pageY - this.offsetTop;
         global.isDrawing = true;
+        global.justClicked = true;
 
         var temp = createShape(x,y);
         if(temp !== undefined) {
             drawing.shapes.push(temp);
         }
-        /*
-         context.beginPath();
-         context.moveTo(0, 0);
-         context.lineTo(x, y);
-         context.stroke();
-
-         context.fillStyle = "blue";
-         context.fillRect(x - 30, y - 30, 60, 60);
-         context.strokeRect(x - 30, y - 30, 60, 60);
-         context.strokeStyle = "red";
-         context.beginPath();
-         context.moveTo()
-         //console.log("X: " + x + " " + "Y: " + y);
-         */
     });
 
     $("#myCanvas").mousemove(function(e){
@@ -154,19 +206,9 @@ $(document).ready(function() {
 
             drawing.shapes[drawing.shapes.length - 1].endX = x;
             drawing.shapes[drawing.shapes.length - 1].endY = y;
-
             render();
             drawing.shapes[drawing.shapes.length - 1].draw(global);
-            /*var x = e.pageX - this.offsetLeft;
-            var y = e.pageY - this.offsetTop;
-            global.context.strokeStyle = drawing.nextColor;
-            global.context.clearRect(0, 0, 500, 500);
-            global.context.beginPath();
-            global.context.moveTo(global.startX, global.startY);
-            global.context.lineTo(x, y);
-            global.context.stroke();*/
         }
-
     });
 
     $("#myCanvas").mouseup(function(e){
@@ -176,12 +218,11 @@ $(document).ready(function() {
 
         drawing.shapes[drawing.shapes.length - 1].endX = x;
         drawing.shapes[drawing.shapes.length - 1].endY = y;
-        /*global.context.beginPath();
-        global.context.moveTo(x, y);
-        global.context.lineTo(x, y);
-        global.context.stroke();*/
 
         global.isDrawing = false;
+        if(drawing.nextColor === "white") {
+            drawing.nextColor = drawing.tempColor;
+        }
     });
 
     $("#myCanvas").mouseleave(function(e) {
@@ -211,15 +252,12 @@ $(document).ready(function() {
         return new Text(x, y, drawing.nextColor, drawing.nextWidth);
     }
 
-    function createEraser(x, y) {
-        return new Eraser(x, y, drawing.nextColor, drawing.nextWidth);
-    }
-
     var createShape = createPen;
 
     function render() {
         global.context.clearRect(0, 0, canvas.width, canvas.height);
         for(var i = 0; i < drawing.shapes.length; i++) {
+            console.log
             drawing.shapes[i].draw(global);
         }
     }
