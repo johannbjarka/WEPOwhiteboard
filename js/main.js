@@ -188,6 +188,10 @@ $(document).ready(function() {
     });
 
     $("#myCanvas").mousedown(function(e){
+        if(drawing.nextColor === "white" && !drawing.isEraser) {
+            drawing.nextColor = drawing.tempColor;
+        }
+
         var x = e.pageX - this.offsetLeft;
         var y = e.pageY - this.offsetTop;
         global.isDrawing = true;
@@ -220,9 +224,6 @@ $(document).ready(function() {
         drawing.shapes[drawing.shapes.length - 1].endY = y;
 
         global.isDrawing = false;
-        if(drawing.nextColor === "white") {
-            drawing.nextColor = drawing.tempColor;
-        }
     });
 
     $("#myCanvas").mouseleave(function(e) {
@@ -257,7 +258,6 @@ $(document).ready(function() {
     function render() {
         global.context.clearRect(0, 0, canvas.width, canvas.height);
         for(var i = 0; i < drawing.shapes.length; i++) {
-            console.log
             drawing.shapes[i].draw(global);
         }
     }
