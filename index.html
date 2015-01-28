@@ -41,7 +41,7 @@
             <input type="radio" name="tButton" class="toolButton" data-toolType="Circle"/>Circle
             <input type="radio" name="tButton" class="toolButton" data-toolType="Text"/>Text
             <input type="radio" name="tButton" class="toolButton" data-toolType="Eraser"/>Eraser
-            <input type="radio" name="tButton" class="toolButton" data-toolType="Select"/>Select
+            <input type="radio" name="tButton" class="toolButton" data-toolType="Move"/>Move
         </form>
         <p>
             <button class="colorButton btn btn-default" id="blackButton" data-color="black">Black</button>
@@ -53,11 +53,12 @@
             <button class="thickButton btn btn-default" data-thickness="2">Small</button>
             <button class="thickButton btn btn-default" data-thickness="5">Medium</button>
             <button class="thickButton btn btn-default" data-thickness="10">Large</button>
+            <button class="thickButton btn btn-default" data-thickness="20">Huge</button>
             <button class="btn btn-default" id="clearButton">Clear</button>
             <button class="btn btn-default" id="undoButton">Undo</button>
             <button class="btn btn-default" id="redoButton">Redo</button>
         </p>
-
+        <div class="text-spawner"></div>
         <canvas id="myCanvas" width="500" height="500">
             This text is displayed if your browser doesn't support HTML5 Canvas.
         </canvas>

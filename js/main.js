@@ -7,7 +7,8 @@ $(document).ready(function() {
         //canvas: document.getElementById("myCanvas"),
         context: canvas.getContext("2d"),
         isDrawing: false,
-        isEraser: false
+        isEraser: false,
+        isMoving: false
     };
 
     var drawing = {
@@ -20,7 +21,7 @@ $(document).ready(function() {
     };
 
     var Shape = Base.extend({
-       constructor: function(x, y, color, type, thickness) {
+        constructor: function(x, y, color, type, thickness) {
            this.x = x;
            this.y = y;
            this.endX = x;
@@ -29,7 +30,7 @@ $(document).ready(function() {
            this.color = color;
            this.thickness = thickness;
            this.selected = false;
-       },
+        },
         calcBounds: function() {
             var minX = Math.min(this.x, this.endX);
             var minY = Math.min(this.y, this.endY);
@@ -37,7 +38,18 @@ $(document).ready(function() {
             var height = Math.abs(this.endY - this.y);
 
             return new Rectangle(minX, minY, width, height);
+        },
+        isInShape: function(x, y) {
+            var bounds = this.calcBounds();
+            if(x >= bounds.x && x <= bounds.x + bounds.width
+                && y >= bounds.y && y <= bounds.y + bounds.height) {
+                return true;
+            }
+            else {
+                return false;
+            }
         }
+
     });
 
     var Pen = Shape.extend( {
@@ -141,6 +153,9 @@ $(document).ready(function() {
             createShape = createPen;
             drawing.isEraser = true;
         }
+        else if(tool === "Move") {
+            global.isMoving = true;
+        }
         else {
             var temp = "create" + tool;
             var fun = eval(temp);
@@ -164,6 +179,7 @@ $(document).ready(function() {
 //
     $("#clearButton").click(function(event) {
         drawing.shapes.length = 0;
+        drawing.redo.length = 0;
         global.context.clearRect(0, 0, canvas.width, canvas.height);
 
     });
@@ -188,18 +204,35 @@ $(document).ready(function() {
     });
 
     $("#myCanvas").mousedown(function(e){
-        if(drawing.nextColor === "white" && !drawing.isEraser) {
-            drawing.nextColor = drawing.tempColor;
-        }
 
         var x = e.pageX - this.offsetLeft;
         var y = e.pageY - this.offsetTop;
-        global.isDrawing = true;
-        global.justClicked = true;
 
-        var temp = createShape(x,y);
-        if(temp !== undefined) {
-            drawing.shapes.push(temp);
+        if(global.isMoving) {
+            for(var i = (drawing.shapes.length - 1); i >= 0; i-- ) {
+                if(drawing.shapes[i].isInShape(x, y)) {
+                    var obj = drawing.shapes[i];
+                    myState.dragoffx = x - obj.x;
+                    myState.dragoffy = y - obj.y;
+                    myState.selection = obj;
+                    return;
+                }
+            }
+        }
+        else {
+            if(drawing.nextColor === "white" && !drawing.isEraser) {
+                drawing.nextColor = drawing.tempColor;
+            }
+
+            global.isDrawing = true;
+            global.justClicked = true;
+
+            var temp = createShape(x,y);
+            if(temp !== undefined) {
+                drawing.shapes.push(temp);
+            }
+
+            drawing.redo.length = 0;
         }
     });
 
