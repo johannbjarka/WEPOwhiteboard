@@ -13,6 +13,8 @@ $(document).ready(function() {
         dragY: 0,
         dragEndX: 0,
         dragEndY: 0,
+        startX: 0,
+        startY: 0,
         selectedObject: null,
         selectedTool: "Pen"
     };
@@ -61,6 +63,8 @@ $(document).ready(function() {
             this.base(x, y, color, "Pen", thick);
             this.clickX = [];
             this.clickY = [];
+            this.tempX = [];
+            this.tempY = [];
         },
 
         addClick: function(x, y) {
@@ -171,7 +175,6 @@ $(document).ready(function() {
     $(".toolButton").click(function(event) {
         var tool = $(this).attr("data-toolType");
         global.selectedTool = tool;
-        console.log(global.selectedTool);
         if(tool === "Eraser") {
             drawing.tempColor = drawing.nextColor;
             drawing.nextColor = "white";
@@ -330,12 +333,19 @@ $(document).ready(function() {
         if(global.isMoving) {
             for(var i = (drawing.shapes.length - 1); i >= 0; i-- ) {
                 if(drawing.shapes[i].isInShape(x, y)) {
-                    console.log("dayyum");
                     var obj = drawing.shapes[i];
-                    global.dragX = x - obj.x;
-                    global.dragY = y - obj.y;
-                    global.dragEndX = x - obj.endX;
-                    global.dragEndY = y - obj.endY;
+                    if(obj.type === "Pen") {
+                        global.startX = x;
+                        global.startY = y;
+                        obj.tempX = obj.clickX.slice();
+                        obj.tempY = obj.clickY.slice();
+                    }
+                    else {
+                        global.dragX = x - obj.x;
+                        global.dragY = y - obj.y;
+                        global.dragEndX = x - obj.endX;
+                        global.dragEndY = y - obj.endY;
+                    }
                     global.selectedObject = obj;
                     return;
                 }
@@ -354,7 +364,6 @@ $(document).ready(function() {
 
             var temp = createShape(x,y);
             if(temp !== undefined) {
-                console.log("addaði shape");
                 drawing.shapes.push(temp);
             }
 
@@ -367,11 +376,10 @@ $(document).ready(function() {
         var y = e.pageY - this.offsetTop;
 
         if(global.isMoving && global.selectedObject.type === "Pen") {
-            console.log("type = pen");
             var l = global.selectedObject.clickX.length;
             for(var i = 0; i < l; i++) {
-                global.selectedObject.clickX[i] = x  - global.selectedObject.clickX[i];
-                global.selectedObject.clickY[i] = y - global.dragY - global.selectedObject.clickY[i];
+                global.selectedObject.clickX[i] = global.selectedObject.tempX[i] + x - global.startX;
+                global.selectedObject.clickY[i] = global.selectedObject.tempY[i] + y - global.startY;
                 render();
             }
         }
@@ -381,7 +389,6 @@ $(document).ready(function() {
             global.selectedObject.y = y - global.dragY;
             global.selectedObject.endX = x - global.dragEndX;
             global.selectedObject.endY = y - global.dragEndY;
-            console.log("wtf");
             render();
         }
 
@@ -405,7 +412,6 @@ $(document).ready(function() {
         else {
             var x = e.pageX - this.offsetLeft;
             var y = e.pageY - this.offsetTop;
-            console.log("dafeck");
             drawing.shapes[drawing.shapes.length - 1].endX = x;
             drawing.shapes[drawing.shapes.length - 1].endY = y;
 
