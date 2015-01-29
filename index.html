@@ -59,14 +59,28 @@
             <button class="btn btn-default" id="undoButton">Undo</button>
             <button class="btn btn-default" id="redoButton">Redo</button>
 			<button class="btn btn-default" id="saveButton">Save</button>
-			<p>
-				<select multiple="multiple" id="load">
+			<button class="btn btn-default" id="saveButtonTemp">SaveTemplate</button>
+			<div>
+				<div>
+					<p>Saved Drawings</p>
+					<select multiple="multiple" id="load">
 
-				</select>
-				<script id="mSelection" type="text/html">
-					<option value='${ID}'>${drawingTitle}</option>
-				</script>
-			</p>
+					</select>
+					<script id="mSelection" type="text/html">
+						<option value='${ID}'>${drawingTitle}</option>
+					</script>
+				
+				<div>
+				<div>
+					<p>Templetes</p>
+					<select multiple="multiple" id="loadtemp">
+
+					</select>
+					<script id="mSelectiontemp" type="text/html">
+						<option value='${ID}'>${tempTitle}</option>
+					</script>
+				</div>
+			</div>
 
         </p>
         <div class="text-spawner"></div>

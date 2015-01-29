@@ -244,21 +244,21 @@ $(document).ready(function() {
                 };
 
                 $.ajax({
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                url: "http://whiteboard.apphb.com/Home/Save",
-                data: param,
-                dataType: "jsonp",
-                crossDomain: true,
-                  success: function (data) {
-                    var arr = [{ "ID": data.ID,
-                        "drawingTitle": title
-                    }];
-                    $("#mSelection").tmpl(arr).appendTo("#load");
-                },
-                error: function (xhr, err) {
-                    alert("error");
-                }
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: "http://whiteboard.apphb.com/Home/Save",
+                    data: param,
+                    dataType: "jsonp",
+                    crossDomain: true,
+                      success: function (data) {
+                        var arr = [{ "ID": data.ID,
+                            "drawingTitle": title
+                        }];
+                        $("#mSelection").tmpl(arr).appendTo("#load");
+                    },
+                    error: function (xhr, err) {
+                        alert("error");
+                    }
 
                 }); 
             }
@@ -314,6 +314,96 @@ $(document).ready(function() {
             crossDomain: true,
             success: function (data) {
                 $("#mSelection").tmpl(data).appendTo("#load");
+            },
+            error: function (xhr, err) {
+                alert("error:\n" + xhr + "\n" + err);
+            }
+        });
+
+    });
+
+    $("#saveButtonTemp").click(function(event) {
+            var stringifiedArray = JSON.stringify(drawing.shapes);
+            var title = prompt("Input the name of your Template");
+            var username = "carl13"
+            if(title != ""){
+                var param = { 
+                "user": username, // You should use your own username!
+                "name": title,
+                "content": stringifiedArray,
+                "template": false
+                };
+
+                $.ajax({
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: "http://whiteboard.apphb.com/Home/Save",
+                    data: param,
+                    dataType: "jsonp",
+                    crossDomain: true,
+                      success: function (data) {
+                        var arr = [{ "ID": data.ID,
+                            "tempTitle": title
+                        }];
+                        $("#mSelectiontemp").tmpl(arr).appendTo("#loadtemp");
+                    },
+                    error: function (xhr, err) {
+                        alert("error");
+                    }
+
+                }); 
+            }
+        
+    });
+
+      $("#loadtemp").dblclick(function(event) {
+           var item = this.options[this.selectedIndex].value;
+            var param = { "id": item };
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "http://whiteboard.apphb.com/Home/Getwhiteboard",
+                data: param,
+                dataType: "jsonp",
+                crossDomain: true,
+                success: function (data) {
+                    var items = JSON.parse(data.WhiteboardContents);
+                    for (var i = 0; i < items.length; i++){
+                        var func = eval(items[i].type);
+                        var ob = new func(items[i].x + 10, items[i].y + 10, items[i].color, items[i].thickness);
+                        ob.endX = items[i].endX + 10;
+                        ob.endY = items[i].endY + 10;
+                        if(items[i].type === "Pen")
+                        {
+                            ob.clickX = items[i].clickX;
+                            ob.clickY = items[i].clickY;   
+                        }
+
+                        drawing.shapes.push(ob);
+                    }
+
+
+                    render();
+                },
+                error: function (xhr, err) {
+                    alert("error:\n" + xhr + "\n" + err);
+                }
+            });
+
+        var param = {
+            "user": "carl13",
+            "template": true
+        };
+
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "http://whiteboard.apphb.com/Home/GetList",
+            data: param,
+            dataType: "jsonp",
+            crossDomain: true,
+            success: function (data) {
+                $("#mSelectiontemp").tmpl(data).appendTo("#loadtemp");
             },
             error: function (xhr, err) {
                 alert("error:\n" + xhr + "\n" + err);
