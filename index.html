@@ -17,6 +17,7 @@
         <link rel="stylesheet" href="css/main.css">
         <link rel="stylesheet" href="bower_components/bootstrap-css-only/css/bootstrap.css"/>
         <script src="js/vendor/modernizr-2.6.2.min.js"></script>
+		
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -57,6 +58,16 @@
             <button class="btn btn-default" id="clearButton">Clear</button>
             <button class="btn btn-default" id="undoButton">Undo</button>
             <button class="btn btn-default" id="redoButton">Redo</button>
+			<button class="btn btn-default" id="saveButton">Save</button>
+			<p>
+				<select multiple="multiple" id="load">
+
+				</select>
+				<script id="mSelection" type="text/html">
+					<option value='${ID}'>${drawingTitle}</option>
+				</script>
+			</p>
+
         </p>
         <div class="text-spawner"></div>
         <canvas id="myCanvas" width="500" height="500">
@@ -69,6 +80,7 @@
         <script src="js/plugins.js"></script>
         <script src="js/main.js"></script>
         <script src="js/Base.js"></script>
+		<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js">
 
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
