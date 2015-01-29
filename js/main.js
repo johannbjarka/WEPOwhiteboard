@@ -8,13 +8,18 @@ $(document).ready(function() {
         context: canvas.getContext("2d"),
         isDrawing: false,
         isEraser: false,
-        isMoving: false
+        isMoving: false,
+        dragX: 0,
+        dragY: 0,
+        dragEndX: 0,
+        dragEndY: 0,
+        selectedObject: null,
+        selectedTool: "Pen"
     };
 
     var drawing = {
         shapes: [],
         redo: [],
-        nextObject: "Pen",
         nextColor: "black",
         tempColor: "black",
         nextWidth: 2
@@ -49,7 +54,6 @@ $(document).ready(function() {
                 return false;
             }
         }
-
     });
 
     var Pen = Shape.extend( {
@@ -65,7 +69,6 @@ $(document).ready(function() {
         },
 
         draw: function(global) {
-            this.addClick(this.endX, this.endY);
             global.context.strokeStyle = this.color;
             global.context.lineWidth = this.thickness;
             global.context.lineJoin = "round";
@@ -75,6 +78,27 @@ $(document).ready(function() {
                 global.context.lineTo(this.clickX[i], this.clickY[i]);
                 global.context.stroke();
             }
+        },
+        calcBounds: function() {
+            var minX = canvas.width;
+            var minY = canvas.height;
+            var maxX = 0;
+            var maxY = 0;
+            for(var i = 0; i < this.clickX.length; i++) {
+                if(this.clickX[i] < minX) {
+                    minX = this.clickX[i];
+                }
+                if(this.clickX[i] > maxX) {
+                    maxX = this.clickX[i];
+                }
+                if(this.clickY[i] < minY) {
+                    minY = this.clickY[i];
+                }
+                if(this.clickY[i] > maxY) {
+                    maxY = this.clickY[i];
+                }
+            }
+            return new Rectangle(minX, minY, maxX - minX, maxY - minY);
         }
     });
 
@@ -97,7 +121,6 @@ $(document).ready(function() {
         constructor: function(x, y, color, thick) {
          this.base(x, y, color, "Rect", thick);
         },
-        // TODO spyrja Hauk um þetta global drasl
         draw: function(global) {
             global.context.strokeStyle = this.color;
             global.context.lineWidth = this.thickness;
@@ -147,6 +170,8 @@ $(document).ready(function() {
 
     $(".toolButton").click(function(event) {
         var tool = $(this).attr("data-toolType");
+        global.selectedTool = tool;
+        console.log(global.selectedTool);
         if(tool === "Eraser") {
             drawing.tempColor = drawing.nextColor;
             drawing.nextColor = "white";
@@ -154,7 +179,7 @@ $(document).ready(function() {
             drawing.isEraser = true;
         }
         else if(tool === "Move") {
-            global.isMoving = true;
+            //global.isMoving = true;
         }
         else {
             var temp = "create" + tool;
@@ -208,16 +233,26 @@ $(document).ready(function() {
         var x = e.pageX - this.offsetLeft;
         var y = e.pageY - this.offsetTop;
 
+        if(global.selectedTool === "Move") {
+            global.isMoving = true;
+        }
         if(global.isMoving) {
             for(var i = (drawing.shapes.length - 1); i >= 0; i-- ) {
                 if(drawing.shapes[i].isInShape(x, y)) {
+                    console.log("dayyum");
                     var obj = drawing.shapes[i];
-                    myState.dragoffx = x - obj.x;
-                    myState.dragoffy = y - obj.y;
-                    myState.selection = obj;
+                    global.dragX = x - obj.x;
+                    global.dragY = y - obj.y;
+                    global.dragEndX = x - obj.endX;
+                    global.dragEndY = y - obj.endY;
+                    global.selectedObject = obj;
                     return;
                 }
             }
+            if(global.selectedObject) {
+                global.selectedObject = null;
+            }
+            global.isMoving = false;
         }
         else {
             if(drawing.nextColor === "white" && !drawing.isEraser) {
@@ -225,10 +260,10 @@ $(document).ready(function() {
             }
 
             global.isDrawing = true;
-            global.justClicked = true;
 
             var temp = createShape(x,y);
             if(temp !== undefined) {
+                console.log("addaði shape");
                 drawing.shapes.push(temp);
             }
 
@@ -237,26 +272,54 @@ $(document).ready(function() {
     });
 
     $("#myCanvas").mousemove(function(e){
-        if(global.isDrawing) {
-            var x = e.pageX - this.offsetLeft;
-            var y = e.pageY - this.offsetTop;
+        var x = e.pageX - this.offsetLeft;
+        var y = e.pageY - this.offsetTop;
 
+        if(global.isMoving && global.selectedObject.type === "Pen") {
+            console.log("type = pen");
+            var l = global.selectedObject.clickX.length;
+            for(var i = 0; i < l; i++) {
+                global.selectedObject.clickX[i] = x  - global.selectedObject.clickX[i];
+                global.selectedObject.clickY[i] = y - global.dragY - global.selectedObject.clickY[i];
+                render();
+            }
+        }
+
+        else if(global.isMoving && global.selectedObject) {
+            global.selectedObject.x = x - global.dragX;
+            global.selectedObject.y = y - global.dragY;
+            global.selectedObject.endX = x - global.dragEndX;
+            global.selectedObject.endY = y - global.dragEndY;
+            console.log("wtf");
+            render();
+        }
+
+        else if(global.isDrawing) {
             drawing.shapes[drawing.shapes.length - 1].endX = x;
             drawing.shapes[drawing.shapes.length - 1].endY = y;
+            if(global.selectedTool === "Pen" || global.selectedTool === "Eraser") {
+                drawing.shapes[drawing.shapes.length - 1].addClick(x, y);
+            }
             render();
             drawing.shapes[drawing.shapes.length - 1].draw(global);
         }
     });
 
     $("#myCanvas").mouseup(function(e){
+        if(global.isMoving) {
+            global.isMoving = false;
+            global.selectedObject = null;
+        }
 
-        var x = e.pageX - this.offsetLeft;
-        var y = e.pageY - this.offsetTop;
+        else {
+            var x = e.pageX - this.offsetLeft;
+            var y = e.pageY - this.offsetTop;
+            console.log("dafeck");
+            drawing.shapes[drawing.shapes.length - 1].endX = x;
+            drawing.shapes[drawing.shapes.length - 1].endY = y;
 
-        drawing.shapes[drawing.shapes.length - 1].endX = x;
-        drawing.shapes[drawing.shapes.length - 1].endY = y;
-
-        global.isDrawing = false;
+            global.isDrawing = false;
+        }
     });
 
     $("#myCanvas").mouseleave(function(e) {
@@ -292,6 +355,7 @@ $(document).ready(function() {
         global.context.clearRect(0, 0, canvas.width, canvas.height);
         for(var i = 0; i < drawing.shapes.length; i++) {
             drawing.shapes[i].draw(global);
+            //console.log(drawing.shapes[i]);
         }
     }
 
