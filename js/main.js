@@ -228,6 +228,97 @@ $(document).ready(function() {
         render();
     });
 
+    $("#saveButton").click(function(event) {
+            var stringifiedArray = JSON.stringify(drawing.shapes);
+            var title = prompt("Input the name of your drawing");
+            var username = "carl13"
+            if(title != ""){
+                var param = { 
+                "user": username, // You should use your own username!
+                "name": title,
+                "content": stringifiedArray,
+                "template": false
+                };
+
+                $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "http://whiteboard.apphb.com/Home/Save",
+                data: param,
+                dataType: "jsonp",
+                crossDomain: true,
+                  success: function (data) {
+                    var arr = [{ "ID": data.ID,
+                        "drawingTitle": title
+                    }];
+                    $("#mSelection").tmpl(arr).appendTo("#load");
+                },
+                error: function (xhr, err) {
+                    alert("error");
+                }
+
+                }); 
+            }
+        
+    });
+
+      $("#load").dblclick(function(event) {
+           var item = this.options[this.selectedIndex].value;
+            var param = { "id": item };
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "http://whiteboard.apphb.com/Home/Getwhiteboard",
+                data: param,
+                dataType: "jsonp",
+                crossDomain: true,
+                success: function (data) {
+                    var items = JSON.parse(data.WhiteboardContents);
+                    drawing.shapes.length = 0;
+                    for (var i = 0; i < items.length; i++){
+                        var func = eval(items[i].type);
+                        var ob = new func(items[i].x, items[i].y, items[i].color, items[i].thickness);
+                        ob.endX = items[i].endX;
+                        ob.endY = items[i].endY;
+                        if(items[i].type === "Pen")
+                        {
+                            ob.clickX = items[i].clickX;
+                            ob.clickY = items[i].clickY;   
+                        }
+
+                        drawing.shapes.push(ob);
+                    }
+
+
+                    render();
+                },
+                error: function (xhr, err) {
+                    alert("error:\n" + xhr + "\n" + err);
+                }
+            });
+
+        var param = {
+            "user": "carl13",
+            "template": true
+        };
+
+        $.ajax({
+            type: "GET",
+            contentType: "application/json; charset=utf-8",
+            url: "http://whiteboard.apphb.com/Home/GetList",
+            data: param,
+            dataType: "jsonp",
+            crossDomain: true,
+            success: function (data) {
+                $("#mSelection").tmpl(data).appendTo("#load");
+            },
+            error: function (xhr, err) {
+                alert("error:\n" + xhr + "\n" + err);
+            }
+        });
+
+    });
+    
     $("#myCanvas").mousedown(function(e){
 
         var x = e.pageX - this.offsetLeft;
