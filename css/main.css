@@ -236,6 +236,15 @@ textarea {
     background-color: green;
 }
 
+#textWidth
+{
+    position: absolute;
+    visibility: hidden;
+    height: auto;
+    width: auto;
+    white-space: nowrap; /* Thanks to Herb Caudill comment */
+}
+
 /* ==========================================================================
    EXAMPLE Media Queries for Responsive Design.
    These examples override the primary ('mobile first') styles.
@@ -249,7 +258,7 @@ textarea {
 @media print,
        (-o-min-device-pixel-ratio: 5/4),
        (-webkit-min-device-pixel-ratio: 1.25),
-       (min-resolution: 120dpi) {
+       (min-resolution: 120dppx) {
     /* Style adjustments for high resolution devices */
 }
 

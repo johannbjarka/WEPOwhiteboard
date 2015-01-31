@@ -3,7 +3,7 @@
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!-->
-<html class="no-js" xmlns="http://www.w3.org/1999/html"> <!--<![endif]-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"> <!--<![endif]-->
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -25,18 +25,8 @@
         <![endif]-->
 
         <!-- Add your site or application content here -->
-        <!--<div class="container-fluid">
-            <div class="row">
-                <div class="col-sm-6">
-                    <p>Virkar þetta?</p>
-                </div>
-                <div class="col-sm-6">
-                    <p>Virkar þetta?</p>
-                </div>
-            </div>
-        </div>-->
-        <form action="">
-            <input type="radio" name="tButton" class="toolButton" data-toolType="Pen"/>Pen
+        <form action="tools">
+            <input type="radio" name="tButton" class="toolButton" data-toolType="Pen" checked/>Pen
             <input type="radio" name="tButton" class="toolButton" data-toolType="Line"/>Line
             <input type="radio" name="tButton" class="toolButton" data-toolType="Rect"/>Rectangle
             <input type="radio" name="tButton" class="toolButton" data-toolType="Circle"/>Circle
@@ -60,33 +50,58 @@
             <button class="btn btn-default" id="redoButton">Redo</button>
 			<button class="btn btn-default" id="saveButton">Save</button>
 			<button class="btn btn-default" id="saveButtonTemp">SaveTemplate</button>
-			<div>
-				<div>
-					<p>Saved Drawings</p>
-					<select multiple="multiple" id="load">
 
-					</select>
-					<script id="mSelection" type="text/html">
-						<option value='${ID}'>${drawingTitle}</option>
-					</script>
-				
-				<div>
-				<div>
-					<p>Templetes</p>
-					<select multiple="multiple" id="loadtemp">
+            <select id="fontPicker">
+                <option value="Arial">Arial</option>
+                <option value="Arial Black">Arial Black</option>
+                <option value="Calibri">Calibri</option>
+                <option value="Courier New">Courier New</option>
+                <option value="Futura">Futura</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+            </select>
 
-					</select>
-					<script id="mSelectiontemp" type="text/html">
-						<option value='${ID}'>${tempTitle}</option>
-					</script>
-				</div>
-			</div>
-
+            <select id="fontSize">
+                <option value="8">8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+                <option value="14">14</option>
+                <option value="16" selected>16</option>
+                <option value="18">18</option>
+                <option value="24">24</option>
+                <option value="30">30</option>
+                <option value="40">40</option>
+            </select>
         </p>
         <div class="text-spawner"></div>
         <canvas id="myCanvas" width="500" height="500">
             This text is displayed if your browser doesn't support HTML5 Canvas.
         </canvas>
+
+        <div>
+            <div>
+                <p>Saved Drawings</p>
+                <select multiple="multiple" id="load">
+
+                </select>
+                <script id="mSelection" type="text/html">
+                    <option value='${ID}'>${drawingTitle}</option>
+                </script>
+
+            </div>
+            <div>
+                <p>Templates</p>
+                <select multiple="multiple" id="loadtemp">
+
+                </select>
+                <script id="mSelectiontemp" type="text/html">
+                    <option value='${ID}'>${tempTitle}</option>
+                </script>
+            </div>
+        </div>
+        <div id="textWidth">Jóhann</div>
+
         <p>Hello World! This is HTML5 Boilerplate.</p>
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
@@ -94,16 +109,7 @@
         <script src="js/plugins.js"></script>
         <script src="js/main.js"></script>
         <script src="js/Base.js"></script>
-		<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js">
+		<script src="http://ajax.microsoft.com/ajax/jquery.templates/beta1/jquery.tmpl.min.js"></script>
 
-        <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-        <script>
-            (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
-            function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
-            e=o.createElement(i);r=o.getElementsByTagName(i)[0];
-            e.src='//www.google-analytics.com/analytics.js';
-            r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
-            ga('create','UA-XXXXX-X');ga('send','pageview');
-        </script>
     </body>
 </html>

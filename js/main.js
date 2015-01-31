@@ -16,7 +16,10 @@ $(document).ready(function() {
         startX: 0,
         startY: 0,
         selectedObject: null,
-        selectedTool: "Pen"
+        selectedTool: "Pen",
+        currentInputBox: null,
+        textX: 0,
+        textY: 0
     };
 
     var drawing = {
@@ -24,7 +27,10 @@ $(document).ready(function() {
         redo: [],
         nextColor: "black",
         tempColor: "black",
-        nextWidth: 2
+        nextWidth: 2,
+        text: "Hello World",
+        font: "Arial",
+        fontSize: "16pt"
     };
 
     var Shape = Base.extend({
@@ -165,10 +171,28 @@ $(document).ready(function() {
         constructor: function(x, y, color, thick) {
             // ToDo: Fix this shit
             this.base(x, y, color, "Text", thick);
+            this.text = drawing.text,
+            this.font = drawing.font,
+            this.size = drawing.fontSize
         },
 
         draw: function(global) {
+            global.context.font = this.size + " " + this.font;
+            global.context.fillStyle = this.color;
+            global.context.fillText(this.text, this.x, this.y);
+        },
 
+        calcBounds: function() {
+
+            var textWidth = document.getElementById("textWidth");
+            textWidth.innerHTML = this.text;
+            textWidth.style.fontSize = this.size;
+            var height = (textWidth.clientHeight + 1);
+            var width = (textWidth.clientWidth + 1);
+            var x = this.x;
+            var y = this.y - height / 1.7;
+            console.log(x + " " + y + " " + height + " " + width);
+            return new Rectangle(x, y, width, height);
         }
     });
 
@@ -230,6 +254,14 @@ $(document).ready(function() {
         }
         render();
     });
+
+    $("#fontPicker").click(function(event) {
+        drawing.font = $(this).val();
+    });
+
+    $("#fontSize").click(function(event) {
+        drawing.fontSize = $(this).val() + "pt";
+    })
 
     $("#saveButton").click(function(event) {
             var stringifiedArray = JSON.stringify(drawing.shapes);
@@ -368,20 +400,24 @@ $(document).ready(function() {
                 crossDomain: true,
                 success: function (data) {
                     var items = JSON.parse(data.WhiteboardContents);
+                    var rand = Math.floor(Math.random() * 30);
+                    console.log(rand);
                     for (var i = 0; i < items.length; i++){
                         var func = eval(items[i].type);
-                        var ob = new func(items[i].x + 10, items[i].y + 10, items[i].color, items[i].thickness);
-                        ob.endX = items[i].endX + 10;
-                        ob.endY = items[i].endY + 10;
+                        var ob = new func(items[i].x + rand, items[i].y + rand, items[i].color, items[i].thickness);
+                        ob.endX = items[i].endX + rand;
+                        ob.endY = items[i].endY + rand;
                         if(items[i].type === "Pen")
                         {
                             ob.clickX = items[i].clickX;
-                            ob.clickY = items[i].clickY;   
+                            ob.clickY = items[i].clickY;
+                            for(var i = 0; i < ob.clickX.length; i++) {
+                                ob.clickX[i] += rand;
+                                ob.clickY[i] += rand;
+                            }
                         }
-
                         drawing.shapes.push(ob);
                     }
-
 
                     render();
                 },
@@ -445,7 +481,7 @@ $(document).ready(function() {
             }
             global.isMoving = false;
         }
-        else {
+        else if (global.selectedTool !== "Text") {
             if(drawing.nextColor === "white" && !drawing.isEraser) {
                 drawing.nextColor = drawing.tempColor;
             }
@@ -499,7 +535,7 @@ $(document).ready(function() {
             global.selectedObject = null;
         }
 
-        else {
+        else if (global.selectedTool !== "Text") {
             var x = e.pageX - this.offsetLeft;
             var y = e.pageY - this.offsetTop;
             drawing.shapes[drawing.shapes.length - 1].endX = x;
@@ -532,7 +568,6 @@ $(document).ready(function() {
     }
 
     function createText(x, y) {
-        //TODO fix this ish
         return new Text(x, y, drawing.nextColor, drawing.nextWidth);
     }
 
@@ -552,4 +587,41 @@ $(document).ready(function() {
         this.width = width,
         this.height = height
     }
+
+    $("#myCanvas").on("click", function(event) {
+        if(global.selectedTool === "Text") {
+            if(global.currentInputBox) {
+                global.currentInputBox.remove();
+            }
+
+            global.textX = event.pageX - this.offsetLeft;
+            global.textY = event.pageY - this.offsetTop;
+
+            global.currentInputBox = $("<input/>");
+            global.currentInputBox.css("position", "absolute");
+            global.currentInputBox.css("top", event.pageY);
+            global.currentInputBox.css("left", event.pageX);
+
+            $(".text-spawner").append(global.currentInputBox);
+
+            global.currentInputBox.focus();
+        }
+
+    });
+
+    $(document).keypress(function(event) {
+        if(event.which === 13) {
+            if(global.currentInputBox) {
+                drawing.text = global.currentInputBox.val();
+                //var textWidth = document.getElementById('textWidth');
+                //textWidth.innerHTML = global.currentInputBox.val();
+                var temp = createText(global.textX, global.textY);
+                if(temp !== undefined) {
+                    drawing.shapes.push(temp);
+                }
+                render();
+                global.currentInputBox.remove();
+            }
+        }
+    });
 });
