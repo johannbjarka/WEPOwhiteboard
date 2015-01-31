@@ -42,7 +42,6 @@ $(document).ready(function() {
            this.type = type;
            this.color = color;
            this.thickness = thickness;
-           this.selected = false;
         },
         calcBounds: function() {
             var minX = Math.min(this.x, this.endX);
@@ -54,13 +53,8 @@ $(document).ready(function() {
         },
         isInShape: function(x, y) {
             var bounds = this.calcBounds();
-            if(x >= bounds.x && x <= bounds.x + bounds.width
-                && y >= bounds.y && y <= bounds.y + bounds.height) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return !!(x >= bounds.x && x <= bounds.x + bounds.width
+            && y >= bounds.y && y <= bounds.y + bounds.height);
         }
     });
 
@@ -168,12 +162,11 @@ $(document).ready(function() {
     });
 
     var Text = Shape.extend( {
-        constructor: function(x, y, color, thick) {
-            // ToDo: Fix this shit
+        constructor: function(x, y, color, thick, text, font, fontSize) {
             this.base(x, y, color, "Text", thick);
-            this.text = drawing.text,
-            this.font = drawing.font,
-            this.size = drawing.fontSize
+            this.text = text;
+            this.font = font;
+            this.size = fontSize;
         },
 
         draw: function(global) {
@@ -191,7 +184,6 @@ $(document).ready(function() {
             var width = (textWidth.clientWidth + 1);
             var x = this.x;
             var y = this.y - height / 1.7;
-            console.log(x + " " + y + " " + height + " " + width);
             return new Rectangle(x, y, width, height);
         }
     });
@@ -206,7 +198,7 @@ $(document).ready(function() {
             drawing.isEraser = true;
         }
         else if(tool === "Move") {
-            //global.isMoving = true;
+            //Do nothing
         }
         else {
             var temp = "create" + tool;
@@ -245,9 +237,6 @@ $(document).ready(function() {
     });
 
     $("#redoButton").click(function(event) {
-        /*if (typeof drawing.redo !== 'undefined' && drawing.redo.length > 0) {
-            drawing.shapes.push(drawing.redo.pop());
-        }*/
         var temp = drawing.redo.pop();
         if(temp !== undefined) {
             drawing.shapes.push(temp);
@@ -261,12 +250,12 @@ $(document).ready(function() {
 
     $("#fontSize").click(function(event) {
         drawing.fontSize = $(this).val() + "pt";
-    })
+    });
 
     $("#saveButton").click(function(event) {
             var stringifiedArray = JSON.stringify(drawing.shapes);
             var title = prompt("Input the name of your drawing");
-            var username = "carl13"
+            var username = "carl13";
             if(title != ""){
                 var param = { 
                 "user": username, // You should use your own username!
@@ -298,7 +287,7 @@ $(document).ready(function() {
     });
 
       $("#load").dblclick(function(event) {
-           var item = this.options[this.selectedIndex].value;
+            var item = this.options[this.selectedIndex].value;
             var param = { "id": item };
             $.ajax({
                 type: "GET",
@@ -312,19 +301,23 @@ $(document).ready(function() {
                     drawing.shapes.length = 0;
                     for (var i = 0; i < items.length; i++){
                         var func = eval(items[i].type);
-                        var ob = new func(items[i].x, items[i].y, items[i].color, items[i].thickness);
-                        ob.endX = items[i].endX;
-                        ob.endY = items[i].endY;
-                        if(items[i].type === "Pen")
-                        {
-                            ob.clickX = items[i].clickX;
-                            ob.clickY = items[i].clickY;   
+                        var obj;
+                        if(items[i].type === "Text") {
+                            obj = new func(items[i].x, items[i].y, items[i].color, items[i].thickness,
+                                items[i].text, items[i].font, items[i].size);
                         }
 
-                        drawing.shapes.push(ob);
+                        else {
+                            obj = new func(items[i].x, items[i].y, items[i].color, items[i].thickness);
+                            obj.endX = items[i].endX;
+                            obj.endY = items[i].endY;
+                            if(items[i].type === "Pen") {
+                                obj.clickX = items[i].clickX;
+                                obj.clickY = items[i].clickY;
+                            }
+                        }
+                        drawing.shapes.push(obj);
                     }
-
-
                     render();
                 },
                 error: function (xhr, err) {
@@ -357,7 +350,7 @@ $(document).ready(function() {
     $("#saveButtonTemp").click(function(event) {
             var stringifiedArray = JSON.stringify(drawing.shapes);
             var title = prompt("Input the name of your Template");
-            var username = "carl13"
+            var username = "carl13";
             if(title != ""){
                 var param = { 
                 "user": username, // You should use your own username!
@@ -389,7 +382,7 @@ $(document).ready(function() {
     });
 
       $("#loadtemp").dblclick(function(event) {
-           var item = this.options[this.selectedIndex].value;
+            var item = this.options[this.selectedIndex].value;
             var param = { "id": item };
             $.ajax({
                 type: "GET",
@@ -401,24 +394,30 @@ $(document).ready(function() {
                 success: function (data) {
                     var items = JSON.parse(data.WhiteboardContents);
                     var rand = Math.floor(Math.random() * 30);
-                    console.log(rand);
                     for (var i = 0; i < items.length; i++){
                         var func = eval(items[i].type);
-                        var ob = new func(items[i].x + rand, items[i].y + rand, items[i].color, items[i].thickness);
-                        ob.endX = items[i].endX + rand;
-                        ob.endY = items[i].endY + rand;
-                        if(items[i].type === "Pen")
-                        {
-                            ob.clickX = items[i].clickX;
-                            ob.clickY = items[i].clickY;
-                            for(var i = 0; i < ob.clickX.length; i++) {
-                                ob.clickX[i] += rand;
-                                ob.clickY[i] += rand;
+                        var obj;
+
+                        if(items[i].type === "Text") {
+                            obj = new func(items[i].x, items[i].y, items[i].color, items[i].thickness,
+                                items[i].text, items[i].font, items[i].size);
+                        }
+
+                        else {
+                            obj = new func(items[i].x + rand, items[i].y + rand, items[i].color, items[i].thickness);
+                            obj.endX = items[i].endX + rand;
+                            obj.endY = items[i].endY + rand;
+                            if (items[i].type === "Pen") {
+                                obj.clickX = items[i].clickX;
+                                obj.clickY = items[i].clickY;
+                                for (var i = 0; i < obj.clickX.length; i++) {
+                                    obj.clickX[i] += rand;
+                                    obj.clickY[i] += rand;
+                                }
                             }
                         }
-                        drawing.shapes.push(ob);
+                        drawing.shapes.push(obj);
                     }
-
                     render();
                 },
                 error: function (xhr, err) {
@@ -568,7 +567,7 @@ $(document).ready(function() {
     }
 
     function createText(x, y) {
-        return new Text(x, y, drawing.nextColor, drawing.nextWidth);
+        return new Text(x, y, drawing.nextColor, drawing.nextWidth, drawing.text, drawing.font, drawing.fontSize);
     }
 
     var createShape = createPen;
@@ -582,10 +581,10 @@ $(document).ready(function() {
     }
 
     function Rectangle(x, y, width, height) {
-        this.x = x,
-        this.y = y,
-        this.width = width,
-        this.height = height
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
     }
 
     $("#myCanvas").on("click", function(event) {
